@@ -1,0 +1,48 @@
+services:
+  db:
+    image: mariadb:10.11
+    restart: always
+    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
+    volumes:
+      - ./db_data:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=159753Mcm!Nextcloud
+      - MYSQL_PASSWORD=159753mcm
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=nextcloud
+
+  redis:
+    image: redis:alpine
+    restart: always
+    volumes:
+      - ./redis_data:/data
+
+  app:
+    image: nextcloud:latest
+    restart: always
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./nextcloud_data:/var/www/html
+      # Mapeando suas pastas locais para dentro do contêiner
+      - /mnt/Arquive:/mnt/Arquive
+      - /run/media/private/canela/Backup:/mnt/Backup
+    environment:
+      - MYSQL_PASSWORD=sua_senha_segura_aqui
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=nextcloud
+      - MYSQL_HOST=db
+      - REDIS_HOST=redis
+
+  cron:
+    image: nextcloud:latest
+    restart: always
+    volumes:
+      - ./nextcloud_data:/var/www/html
+    entrypoint: /cron.sh
+    depends_on:
+      - db
+      - redis
