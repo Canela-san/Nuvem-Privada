@@ -1,0 +1,14 @@
+# Ignorar os dados brutos do Banco de Dados
+db_data/
+
+# Ignorar o cache em disco do Redis
+redis_data/
+
+# Ignorar a estrutura interna, aplicativos e dados de usuários do Nextcloud
+nextcloud_data/
+
+# Ignorar qualquer tipo de arquivo de backup compactado
+*.tar.xz
+*.tar.gz
+*.zip
+*.bak
