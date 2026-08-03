@@ -26,15 +26,15 @@ cd "$PROJECT_DIR"
 echo "-> Sincronizando discos físicos com o banco de dados MariaDB..."
 # A flag -T desabilita a alocação de terminal virtual. É OBRIGATÓRIA para 
 # scripts automatizados rodarem perfeitamente no Docker em segundo plano.
-docker-compose exec -T --user www-data app php occ files:scan --all
+docker compose exec -T --user www-data app php occ files:scan --all
 
 # ------------------------------------------------------------------------------
 # OPERAÇÃO 2: Limpeza de Cache (Exemplo de operação útil adicional)
 # ------------------------------------------------------------------------------
 # O Nextcloud acumula lixo no banco de dados com o tempo. Isso limpa a sujeira.
 echo "-> Limpando arquivos de cache antigos e lixeiras expiradas..."
-docker-compose exec -T --user www-data app php occ trashbin:cleanup --all-users
-docker-compose exec -T --user www-data app php occ versions:cleanup
+docker compose exec -T --user www-data app php occ trashbin:cleanup --all-users
+docker compose exec -T --user www-data app php occ versions:cleanup
 
 # ------------------------------------------------------------------------------
 # OPERAÇÃO 3: Aqui você pode adicionar backups futuros, etc.

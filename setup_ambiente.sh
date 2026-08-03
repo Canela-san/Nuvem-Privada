@@ -19,7 +19,7 @@ sudo apt-get update
 # 2. Instala os motores, ferramentas de monitoramento e criptografia
 # (ffmpeg incluído aqui caso você queira manipular vídeos fora do Docker futuramente)
 echo "[2/4] Instalando Docker, PV, ZuluCrypt e utilitários..."
-sudo apt-get install -y docker.io docker-compose curl git pv zulucrypt-cli ffmpeg
+sudo apt-get install -y docker.io docker-compose docker-compose-v2 docker-buildx curl git pv zulucrypt-cli ffmpeg
 
 # 3. Instala a malha de rede segura (Tailscale)
 echo "[3/4] Instalando Tailscale (VPN Mesh)..."

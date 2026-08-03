@@ -16,7 +16,7 @@ mkdir -p "$BACKUP_DEST"
 cd "$PROJECT_DIR"
 
 echo "[1/4] Desligando os motores para garantir consistência do MariaDB..."
-docker-compose down
+docker compose down
 
 echo "[2/4] Calculando o volume de dados bruto..."
 # Conta exatamente quantos bytes existem na pasta para o 'pv' saber o 100%
@@ -31,7 +31,7 @@ tar -cf - . | pv -s "$TAMANHO_TOTAL" | xz -z -9 -T0 --memlimit=7GiB > "$BACKUP_F
 
 echo ""
 echo "[4/4] Religa o servidor para não interromper o uso..."
-docker-compose up -d
+docker compose up -d
 
 echo "====================================================="
 echo " Backup concluído com excelência!"

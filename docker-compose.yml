@@ -18,7 +18,7 @@ services:
       - ./redis_data:/data
 
   app:
-    image: nextcloud:latest
+    build: .
     restart: always
     ports:
       - "8080:80"
@@ -38,7 +38,7 @@ services:
       - REDIS_HOST=redis
 
   cron:
-    image: nextcloud:latest
+    build: .
     restart: always
     volumes:
       - ./nextcloud_data:/var/www/html

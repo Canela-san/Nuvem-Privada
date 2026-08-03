@@ -1,0 +1,4 @@
+db_data/
+redis_data/
+nextcloud_data/
+*.tar.xz
