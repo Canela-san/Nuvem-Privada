@@ -6,10 +6,10 @@ services:
     volumes:
       - ./db_data:/var/lib/mysql
     environment:
-      - MYSQL_ROOT_PASSWORD=159753Mcm!Nextcloud
-      - MYSQL_PASSWORD=159753mcm
-      - MYSQL_DATABASE=nextcloud
-      - MYSQL_USER=nextcloud
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
 
   redis:
     image: redis:alpine
@@ -31,9 +31,9 @@ services:
       - /mnt/Arquive:/mnt/Arquive
       - /mnt/Backup_Cripto:/mnt/Backup_Cripto:rshared
     environment:
-      - MYSQL_PASSWORD=159753mcm
-      - MYSQL_DATABASE=nextcloud
-      - MYSQL_USER=nextcloud
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
       - MYSQL_HOST=db
       - REDIS_HOST=redis
 

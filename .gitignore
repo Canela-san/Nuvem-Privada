@@ -12,3 +12,6 @@ nextcloud_data/
 *.tar.gz
 *.zip
 *.bak
+
+# Ignorar variáveis de ambiente com segredos reais (.env.example continua versionado)
+.env

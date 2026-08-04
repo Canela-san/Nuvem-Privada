@@ -53,6 +53,8 @@ Nuvem-Privada/
 ├── setup_ambiente.sh        # Provisionamento inicial do servidor hospedeiro
 ├── rotina_nas.sh             # Manutenção periódica (scan de arquivos, limpeza)
 ├── backup_frio_nas.sh        # Backup a frio compactado (.tar.xz)
+├── .env                      # Segredos reais (NÃO versionado)
+├── .env.example              # Modelo de variáveis (versionado)
 ├── .gitignore / .dockerignore
 ├── LICENSE
 ├── db_data/                  # (gerado em runtime, ignorado no git)
@@ -88,12 +90,18 @@ chmod +x setup_ambiente.sh
 
 > ⚠️ Após a execução, **reinicie a sessão ou o computador** para que a permissão do grupo Docker entre em vigor. Em seguida, rode `sudo tailscale up` para conectar a máquina à sua rede privada.
 
-### 3. Configurar variáveis sensíveis
+### 3. Configurar variáveis de ambiente
 
-O `docker-compose.yml` atual contém credenciais de exemplo do MariaDB diretamente no arquivo. **Antes de subir a stack**, é altamente recomendado:
+As credenciais do MariaDB **não ficam mais hardcoded** no `docker-compose.yml` — elas são lidas de um arquivo `.env` local (ignorado pelo git). Copie o modelo e ajuste os valores:
 
-- Trocar as senhas padrão (`MYSQL_ROOT_PASSWORD`, `MYSQL_PASSWORD`) por valores fortes e únicos;
-- Mover essas variáveis para um arquivo `.env` (não versionado) e referenciá-las no `docker-compose.yml` com `${VARIAVEL}`, evitando que segredos fiquem expostos no controle de versão.
+```bash
+cp .env.example .env
+nano .env   # ou o editor de sua preferência
+```
+
+Preencha `MYSQL_ROOT_PASSWORD` e `MYSQL_PASSWORD` com senhas fortes e únicas. O Docker Compose carrega o `.env` automaticamente (por estar no mesmo diretório do `docker-compose.yml`) e substitui as variáveis `${VARIAVEL}` referenciadas no arquivo.
+
+> ⚠️ **Se você já tem uma instalação rodando** (com dados em `db_data/`), o MariaDB só aplica as senhas do `.env` na **primeira inicialização** do volume. Nesse caso, use no `.env` os **mesmos valores que já estavam em uso** no `docker-compose.yml` antigo — trocar a senha ali não altera a senha já gravada no banco. Para efetivamente rotacionar a senha em uma instalação existente, altere-a via SQL (`ALTER USER` / `SET PASSWORD`) dentro do container `db` e só depois atualize o `.env` para refletir o novo valor.
 
 ### 4. Subir a stack
 
@@ -109,7 +117,8 @@ A aplicação estará disponível em `http://<ip-do-servidor>:8080` (ou pelo IP 
 
 - O acesso remoto é pensado para ocorrer **via Tailscale**, evitando expor a porta `8080` diretamente na internet.
 - O volume `/mnt/Backup_Cripto` é montado com a flag `rshared`, permitindo integração com discos/volumes criptografados gerenciados via `zulucrypt-cli`.
-- Recomenda-se revisar e reforçar as credenciais do banco de dados antes do primeiro uso em produção, conforme descrito acima.
+- **Segredos fora do versionamento**: credenciais do banco de dados vivem exclusivamente no `.env` (ignorado pelo git e pelo contexto de build do Docker). O `docker-compose.yml` referencia apenas `${VARIAVEL}`, e o `.env.example` documenta quais variáveis existem sem expor valores reais.
+- Nunca faça commit do arquivo `.env`. Se ele já foi versionado por engano em algum momento, além de removê-lo do histórico do git, troque as senhas imediatamente — elas devem ser consideradas comprometidas.
 
 ---
 
