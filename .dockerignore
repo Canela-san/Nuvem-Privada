@@ -2,6 +2,7 @@ db_data/
 redis_data/
 nextcloud_data/
 *.tar.xz
+db_dump/
 
 # Nunca incluir segredos reais no contexto de build da imagem
 .env

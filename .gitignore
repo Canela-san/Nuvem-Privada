@@ -15,3 +15,6 @@ nextcloud_data/
 
 # Ignorar variáveis de ambiente com segredos reais (.env.example continua versionado)
 .env
+
+# Ignorar o dump lógico temporário do banco (gerado a cada backup_frio_nas.sh)
+db_dump/

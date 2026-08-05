@@ -10,12 +10,25 @@ services:
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
       - MYSQL_DATABASE=${MYSQL_DATABASE}
       - MYSQL_USER=${MYSQL_USER}
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 20s
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   redis:
-    image: redis:alpine
+    image: redis:8-alpine
     restart: always
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
     volumes:
       - ./redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      start_period: 10s
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   app:
     build: .
@@ -23,8 +36,10 @@ services:
     ports:
       - "8080:80"
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     volumes:
       - ./nextcloud_data:/var/www/html
       # Mapeando suas pastas locais para dentro do contêiner
@@ -36,6 +51,7 @@ services:
       - MYSQL_USER=${MYSQL_USER}
       - MYSQL_HOST=db
       - REDIS_HOST=redis
+      - REDIS_HOST_PASSWORD=${REDIS_PASSWORD}
 
   cron:
     build: .
@@ -44,5 +60,7 @@ services:
       - ./nextcloud_data:/var/www/html
     entrypoint: /cron.sh
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
