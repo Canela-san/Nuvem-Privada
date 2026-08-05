@@ -55,7 +55,7 @@ Nuvem-Privada/
 ├── setup_ambiente.sh        # Provisionamento inicial do servidor hospedeiro
 ├── rotina_nas.sh             # Manutenção periódica (scan de arquivos, limpeza)
 ├── backup_frio_nas.sh        # Backup a frio compactado (.tar.xz)
-├── .env                      # Segredos reais (NÃO versionado)
+├── .env                      # Segredos e caminhos reais (NÃO versionado)
 ├── .env.example              # Modelo de variáveis (versionado)
 ├── .gitignore / .dockerignore
 ├── .github/workflows/lint.yml # CI: shellcheck + validação do compose
@@ -105,6 +105,8 @@ nano .env   # ou o editor de sua preferência
 
 Preencha `MYSQL_ROOT_PASSWORD` e `MYSQL_PASSWORD` com senhas fortes e únicas, e `REDIS_PASSWORD` com uma senha para o Redis (que antes não tinha autenticação nenhuma — agora exige senha via `--requirepass`, e o Nextcloud é informado dela através de `REDIS_HOST_PASSWORD`). O Docker Compose carrega o `.env` automaticamente (por estar no mesmo diretório do `docker-compose.yml`) e substitui as variáveis `${VARIAVEL}` referenciadas no arquivo.
 
+Preencha também `ARQUIVE_PATH` e `BACKUP_PATH` com os caminhos reais dos seus discos/volumes no host. Esses caminhos antes ficavam fixos direto no `docker-compose.yml` (`/mnt/Arquive` e `/mnt/Backup_Cripto`) — agora vivem só no `.env`, que não é versionado. Assim o layout de disco de cada máquina fica fora do repositório e pode ser trocado sem editar o compose.
+
 > ⚠️ **Se você já tem uma instalação rodando** (com dados em `db_data/`), o MariaDB só aplica as senhas do `.env` na **primeira inicialização** do volume. Nesse caso, use no `.env` os **mesmos valores que já estavam em uso** no `docker-compose.yml` antigo — trocar a senha ali não altera a senha já gravada no banco. Para efetivamente rotacionar a senha em uma instalação existente, altere-a via SQL (`ALTER USER` / `SET PASSWORD`) dentro do container `db` e só depois atualize o `.env` para refletir o novo valor.
 
 ### 4. Subir a stack
@@ -120,7 +122,8 @@ A aplicação estará disponível em `http://<ip-do-servidor>:8080` (ou pelo IP 
 ## 🔐 Segurança e Rede
 
 - O acesso remoto é pensado para ocorrer **via Tailscale**, evitando expor a porta `8080` diretamente na internet.
-- O volume `/mnt/Backup_Cripto` é montado com a flag `rshared`, permitindo integração com discos/volumes criptografados gerenciados via `zulucrypt-cli`.
+- O volume `/mnt/Backup` (renomeado a partir do antigo `Backup_Cripto`) é montado com a flag `rshared`, permitindo integração com discos/volumes criptografados gerenciados via `zulucrypt-cli`.
+- **Caminhos de disco fora do versionamento**: os caminhos reais de `/mnt/Arquive` e `/mnt/Backup` no host (variáveis `ARQUIVE_PATH` e `BACKUP_PATH`) vivem só no `.env`, e não mais hardcoded no `docker-compose.yml` — assim o layout de disco de cada máquina não vaza para o repositório.
 - **Segredos fora do versionamento**: credenciais do banco de dados e do Redis vivem exclusivamente no `.env` (ignorado pelo git e pelo contexto de build do Docker). O `docker-compose.yml` referencia apenas `${VARIAVEL}`, e o `.env.example` documenta quais variáveis existem sem expor valores reais.
 - Nunca faça commit do arquivo `.env`. Se ele já foi versionado por engano em algum momento, além de removê-lo do histórico do git, troque as senhas imediatamente — elas devem ser consideradas comprometidas.
 - **Redis com autenticação**: antes o Redis aceitava qualquer conexão dentro da rede interna do Compose, sem senha. Agora exige `REDIS_PASSWORD` (via `--requirepass`), reduzindo a superfície caso outro container comprometido tente acessá-lo.
@@ -147,7 +150,7 @@ crontab -e
 ```
 
 ### `backup_frio_nas.sh`
-Realiza um **backup a frio** (com os serviços temporariamente desligados, garantindo consistência do banco de dados):
+Realiza um **backup a frio** (com os serviços temporariamente desligados, garantindo consistência do banco de dados). O destino do backup (`$ARQUIVE_PATH/Backup-NAS`) é lido diretamente do `.env` do projeto (variável `ARQUIVE_PATH`), então basta apontar essa variável para o disco correto de cada máquina:
 1. Gera um **dump lógico** do MariaDB (`mariadb-dump --all-databases`) ainda com os containers no ar — complementa o backup físico do volume, sendo mais portável entre versões do banco e mais fácil de inspecionar/restaurar isoladamente;
 2. Executa `docker compose down` para parar a stack;
 3. Calcula o volume total de dados a compactar;
@@ -165,6 +168,8 @@ chmod +x backup_frio_nas.sh
 #### Testando a restauração
 
 Um backup nunca testado não é uma garantia. Periodicamente vale validar que ele realmente restaura:
+
+> O caminho `/mnt/Arquive` abaixo é o valor padrão sugerido no `.env.example`; ajuste para o valor de `ARQUIVE_PATH` definido no seu `.env` real, se for diferente.
 
 ```bash
 # Extrair um backup específico em uma pasta separada, sem sobrescrever o ambiente atual
@@ -207,9 +212,9 @@ Os seguintes diretórios são gerados em runtime e **não são versionados** (ve
 - `nextcloud_data/` — arquivos de aplicação e dados dos usuários do Nextcloud
 - `db_dump/` — dump lógico mais recente do banco (`dump_latest.sql.gz`), regravado a cada execução de `backup_frio_nas.sh`
 
-Volumes externos montados no container `app`:
+Volumes externos montados no container `app` (caminhos reais definidos no `.env`, veja `ARQUIVE_PATH` e `BACKUP_PATH`):
 - `/mnt/Arquive` — armazenamento de arquivos/backups de longo prazo
-- `/mnt/Backup_Cripto` — volume criptografado para backups sensíveis
+- `/mnt/Backup` — volume criptografado para backups sensíveis (antigo `Backup_Cripto`)
 
 ---
 

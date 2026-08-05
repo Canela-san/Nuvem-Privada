@@ -4,8 +4,13 @@
 set -euo pipefail
 
 PROJECT_DIR="/home/canela/git/Nuvem-Privada"
-BACKUP_DEST="/mnt/Arquive/Backup-NAS"
 DATA_HORA=$(date '+%Y%m%d_%H%M%S')
+
+# Carrega as variáveis do .env do projeto (ARQUIVE_PATH, entre outras)
+# shellcheck disable=SC1091
+source "$PROJECT_DIR/.env"
+
+BACKUP_DEST="$ARQUIVE_PATH/Backup-NAS"
 BACKUP_FILE="$BACKUP_DEST/backup_nuvem_${DATA_HORA}.tar.xz"
 
 # Quantos dias de backups antigos manter antes de apagar automaticamente

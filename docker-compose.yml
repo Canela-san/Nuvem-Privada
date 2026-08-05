@@ -42,9 +42,10 @@ services:
         condition: service_healthy
     volumes:
       - ./nextcloud_data:/var/www/html
-      # Mapeando suas pastas locais para dentro do contêiner
-      - /mnt/Arquive:/mnt/Arquive
-      - /mnt/Backup_Cripto:/mnt/Backup_Cripto:rshared
+      # Caminhos reais definidos no .env (ARQUIVE_PATH e BACKUP_PATH) — mantém o
+      # layout de disco específico da máquina fora do versionamento
+      - ${ARQUIVE_PATH}:/mnt/Arquive
+      - ${BACKUP_PATH}:/mnt/Backup:rshared
     environment:
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
       - MYSQL_DATABASE=${MYSQL_DATABASE}
